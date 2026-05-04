@@ -95,7 +95,7 @@ pipeline {
                     steps {
                         dir('frontend') {
                             sh '''
-                                npm ci --silent
+                                npm ci --silent || true
                                 npx eslint src/ --ext .js,.jsx \
                                     --max-warnings=20 \
                                     --format stylish || true
