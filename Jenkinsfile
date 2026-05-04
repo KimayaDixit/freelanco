@@ -76,16 +76,18 @@ pipeline {
                 stage('Python Lint') {
                     steps {
                         script {
-                            def services = ['auth-service','user-service','job-service',
-                                            'service-listing-service','chat-service','api-gateway']
+                            def services = ['auth-service','user-service','job-service', 'service-listing-service','chat-service','api-gateway']
                             services.each { svc ->
                                 sh """
-                                    pip install flake8 pylint --quiet --break-system-packages --ignore-installed
+                                    python3 -m venv /tmp/lint-venv
+                                    . /tmp/lint-venv/bin/activate
+                                    pip install flake8 pylint --quiet
                                     echo "── Linting ${svc} ──"
                                     flake8 services/${svc}/app.py \
                                         --max-line-length=120 \
                                         --ignore=E501,W503 \
                                         --statistics || true
+                                    deactivate
                                 """
                             }
                         }
@@ -459,10 +461,11 @@ def changedServicesList() {
 def runPythonTests(String service) {
     dir("services/${service}") {
         sh """
-            pip install -r requirements.txt --quiet --break-system-packages --ignore-installed
-pip         install pytest pytest-cov pytest-mock pytest-flask coverage --quiet --break-system-packages --ignore-installed
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt --quiet
+            pip install pytest pytest-cov pytest-mock pytest-flask coverage --quiet
             mkdir -p test-results
-            # Run tests if test directory exists, otherwise create a placeholder
             if [ -d tests ]; then
                 python -m pytest tests/ \
                     -v \
@@ -478,6 +481,7 @@ pip         install pytest pytest-cov pytest-mock pytest-flask coverage --quiet 
 <?xml version="1.0" ?><testsuite name="${service}" tests="0" errors="0" failures="0" skipped="0"/>
 EOF
             fi
+            deactivate
         """
     }
 }
