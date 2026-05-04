@@ -1,0 +1,287 @@
+services:
+
+  # ── Databases ─────────────────────────────────────────────────────────────────
+
+  auth-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: authdb
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freelanco-network
+
+  user-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: userdb
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freelanco-network
+
+  job-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: jobdb
+    volumes:
+      - job-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freelanco-network
+
+  service-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: servicedb
+    volumes:
+      - service-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freelanco-network
+
+  chat-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: chatdb
+    volumes:
+      - chat-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - freelanco-network
+
+  # ── Backend Services ───────────────────────────────────────────────────────────
+
+  auth-service:
+    build: ./services/auth-service
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      DATABASE_URL: postgresql://postgres:password@auth-db:5432/authdb
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    ports:
+      - "5001:5001"
+    networks:
+      - freelanco-network
+
+  user-service:
+    build: ./services/user-service
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      DATABASE_URL: postgresql://postgres:password@user-db:5432/userdb
+    depends_on:
+      user-db:
+        condition: service_healthy
+    ports:
+      - "5002:5002"
+    networks:
+      - freelanco-network
+
+  job-service:
+    build: ./services/job-service
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      DATABASE_URL: postgresql://postgres:password@job-db:5432/jobdb
+    depends_on:
+      job-db:
+        condition: service_healthy
+    ports:
+      - "5003:5003"
+    networks:
+      - freelanco-network
+
+  service-listing-service:
+    build: ./services/service-listing-service
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      DATABASE_URL: postgresql://postgres:password@service-db:5432/servicedb
+    depends_on:
+      service-db:
+        condition: service_healthy
+    ports:
+      - "5004:5004"
+    networks:
+      - freelanco-network
+
+  chat-service:
+    build: ./services/chat-service
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      DATABASE_URL: postgresql://postgres:password@chat-db:5432/chatdb
+    depends_on:
+      chat-db:
+        condition: service_healthy
+    ports:
+      - "5005:5005"
+    networks:
+      - freelanco-network
+
+  api-gateway:
+    build: ./services/api-gateway
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      AUTH_SERVICE_URL: http://auth-service:5001
+      USER_SERVICE_URL: http://user-service:5002
+      JOB_SERVICE_URL: http://job-service:5003
+      SERVICE_LISTING_URL: http://service-listing-service:5004
+      CHAT_SERVICE_URL: http://chat-service:5005
+    depends_on:
+      - auth-service
+      - user-service
+      - job-service
+      - service-listing-service
+      - chat-service
+    ports:
+      - "8000:8000"
+    networks:
+      - freelanco-network
+
+  jenkins:
+    build: ./jenkins
+    container_name: freelanco-jenkins
+    user: root                          
+    ports:
+      - "8090:8080"                     
+      - "50000:50000"              
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock   
+      - ./jenkins/shared-library:/var/jenkins_home/shared-library
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false -Xmx2g -Xms512m
+    restart: unless-stopped
+    networks:
+      - freelanco-network
+
+  # ── Frontend ───────────────────────────────────────────────────────────────────
+
+  frontend:
+    build: 
+      context: ./frontend
+    ports:
+      - "3000:80"
+    environment:
+      REACT_APP_API_URL: ""
+    depends_on:
+      - api-gateway
+    networks:
+      - freelanco-network
+
+  # ===========================================================================
+  # MONITORING STACK
+  # ===========================================================================
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: freelanco-prometheus
+    volumes:
+      - ./prometheus/config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - freelanco-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: freelanco-grafana
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./prometheus/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./prometheus/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - freelanco-network
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: freelanco-node-exporter
+    command:
+      - '--web.listen-address=:9100'
+    ports:
+      - "9101:9100"
+    restart: unless-stopped
+    networks:
+      - freelanco-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: freelanco-cadvisor
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - freelanco-network
+
+# ── Networks ───────────────────────────────────────────────────────────────────
+
+networks:
+  freelanco-network:
+    driver: bridge
+
+# ── Volumes ────────────────────────────────────────────────────────────────────
+
+volumes:
+  auth-db-data:
+  user-db-data:
+  job-db-data:
+  service-db-data:
+  chat-db-data:
+  prometheus-data:
+  grafana-data:
+  jenkins-data:

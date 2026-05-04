@@ -1,0 +1,151 @@
+# =============================================================================
+# PROMETHEUS CONFIGURATION FOR FREELANCO
+# =============================================================================
+# Author: [Your Name]
+# Last Updated: [Date]
+# Purpose: Monitor all Freelanco microservices and infrastructure
+#
+# LAPTOP-SPECIFIC NOTES:
+# - Targets point to Docker container names (works with docker-compose network)
+# - If running services outside Docker, change targets to localhost:PORT
+# - Scrape interval set to 15s (increase on low-resource laptops to 30s)
+#
+# FUTURE UPGRADES:
+# - [ ] Add alerting rules (alertmanager integration)
+# - [ ] Add service discovery for dynamic targets
+# - [ ] Add remote write to long-term storage
+# - [ ] Add federation for multi-cluster monitoring
+# =============================================================================
+
+global:
+  # CHANGE THIS: Increase to 30s if laptop is slow
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  
+  # External labels (useful when federating multiple Prometheus instances)
+  external_labels:
+    cluster: 'freelanco-local'
+    environment: 'development'
+    # CHANGE THIS: Set to 'production' when deploying
+
+# PLACEHOLDER: Alertmanager configuration (future)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093
+
+# PLACEHOLDER: Alert rules (future)
+# rule_files:
+#   - "alerts/*.yml"
+
+scrape_configs:
+  # =============================================================================
+  # PROMETHEUS SELF-MONITORING
+  # =============================================================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: '/metrics'
+
+  # =============================================================================
+  # SYSTEM METRICS (Node Exporter)
+  # Monitors: CPU, Memory, Disk, Network
+  # =============================================================================
+  - job_name: 'node-exporter'
+    static_configs:
+      # CHANGE THIS: If node-exporter runs on different host/port
+      - targets: ['node-exporter:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'freelanco-server'
+
+  # =============================================================================
+  # DOCKER CONTAINER METRICS (cAdvisor)
+  # Monitors: Container CPU, Memory, Network, Disk I/O
+  # =============================================================================
+  - job_name: 'cadvisor'
+    static_configs:
+      # CHANGE THIS: If cadvisor runs on different port
+      - targets: ['cadvisor:8080']
+    metrics_path: '/metrics'
+
+  # =============================================================================
+  # FREELANCO MICROSERVICES
+  # =============================================================================
+  
+  # API Gateway (Main entry point)
+  - job_name: 'api-gateway'
+    static_configs:
+      # LAPTOP-SPECIFIC: Points to Docker service name
+      # CHANGE THIS: Use 'localhost:8000' if not using Docker
+      - targets: ['api-gateway:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Auth Service (Authentication & JWT)
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-service:5001']
+    metrics_path: '/metrics'
+
+  # User Service (Profiles)
+  - job_name: 'user-service'
+    static_configs:
+      - targets: ['user-service:5002']
+    metrics_path: '/metrics'
+
+  # Job Service (Job postings)
+  - job_name: 'job-service'
+    static_configs:
+      - targets: ['job-service:5003']
+    metrics_path: '/metrics'
+
+  # Service Listing (Freelancer services)
+  - job_name: 'service-listing'
+    static_configs:
+      - targets: ['service-listing-service:5004']
+    metrics_path: '/metrics'
+
+  # Chat Service (Real-time messaging)
+  - job_name: 'chat-service'
+    static_configs:
+      - targets: ['chat-service:5005']
+    metrics_path: '/metrics'
+
+  # =============================================================================
+  # DATABASE MONITORING (Future)
+  # PLACEHOLDER: PostgreSQL metrics
+  # =============================================================================
+  # - job_name: 'postgres-exporter'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+
+  # =============================================================================
+  # NGINX MONITORING (Future)
+  # PLACEHOLDER: Nginx metrics (requires nginx-prometheus-exporter)
+  # =============================================================================
+  # - job_name: 'nginx'
+  #   static_configs:
+  #     - targets: ['nginx-exporter:9113']
+
+  # =============================================================================
+  # BLACKBOX MONITORING (Future)
+  # PLACEHOLDER: HTTP/HTTPS endpoint monitoring
+  # =============================================================================
+  # - job_name: 'blackbox'
+  #   metrics_path: /probe
+  #   params:
+  #     module: [http_2xx]
+  #   static_configs:
+  #     - targets:
+  #       - http://localhost:3000
+  #       - http://localhost:8000/health
+  #   relabel_configs:
+  #     - source_labels: [__address__]
+  #       target_label: __param_target
+  #     - source_labels: [__param_target]
+  #       target_label: instance
+  #     - target_label: __address__
+  #       replacement: blackbox-exporter:9115

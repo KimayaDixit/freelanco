@@ -1,0 +1,168 @@
+version: "3.9"
+
+services:
+
+  # ── Databases ─────────────────────────────────────────────────────────────────
+
+  auth-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: authdb
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: userdb
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  job-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: jobdb
+    volumes:
+      - job-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  service-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: servicedb
+    volumes:
+      - service-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  chat-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: chatdb
+    volumes:
+      - chat-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend Services ───────────────────────────────────────────────────────────
+
+  auth-service:
+    build: ./services/auth-service
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      DATABASE_URL: postgresql://postgres:password@auth-db:5432/authdb
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    ports:
+      - "5001:5001"
+
+  user-service:
+    build: ./services/user-service
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      DATABASE_URL: postgresql://postgres:password@user-db:5432/userdb
+    depends_on:
+      user-db:
+        condition: service_healthy
+    ports:
+      - "5002:5002"
+
+  job-service:
+    build: ./services/job-service
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      DATABASE_URL: postgresql://postgres:password@job-db:5432/jobdb
+    depends_on:
+      job-db:
+        condition: service_healthy
+    ports:
+      - "5003:5003"
+
+  service-listing-service:
+    build: ./services/service-listing-service
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      DATABASE_URL: postgresql://postgres:password@service-db:5432/servicedb
+    depends_on:
+      service-db:
+        condition: service_healthy
+    ports:
+      - "5004:5004"
+
+  chat-service:
+    build: ./services/chat-service
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      DATABASE_URL: postgresql://postgres:password@chat-db:5432/chatdb
+    depends_on:
+      chat-db:
+        condition: service_healthy
+    ports:
+      - "5005:5005"
+
+  api-gateway:
+    build: ./services/api-gateway
+    environment:
+      JWT_SECRET: supersecretkey_change_in_production
+      AUTH_SERVICE_URL: http://auth-service:5001
+      USER_SERVICE_URL: http://user-service:5002
+      JOB_SERVICE_URL: http://job-service:5003
+      SERVICE_LISTING_URL: http://service-listing-service:5004
+      CHAT_SERVICE_URL: http://chat-service:5005
+    depends_on:
+      - auth-service
+      - user-service
+      - job-service
+      - service-listing-service
+      - chat-service
+    ports:
+      - "8000:8000"
+
+  # ── Frontend ───────────────────────────────────────────────────────────────────
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: ""
+    depends_on:
+      - api-gateway
+
+volumes:
+  auth-db-data:
+  user-db-data:
+  job-db-data:
+  service-db-data:
+  chat-db-data:

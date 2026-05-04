@@ -1,0 +1,26 @@
+# =============================================================================
+# GRAFANA DATASOURCE CONFIGURATION
+# =============================================================================
+# Auto-provisions Prometheus as default datasource
+# CHANGE THIS: Update URL if Prometheus runs elsewhere
+# =============================================================================
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    # LAPTOP-SPECIFIC: Points to Docker service name
+    # CHANGE THIS: Use 'http://localhost:9090' if Prometheus not in Docker
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      # FUTURE: Add authentication
+      # httpMethod: POST
+      # basicAuth: true
+      # basicAuthUser: admin
+    # secureJsonData:
+    #   basicAuthPassword: password

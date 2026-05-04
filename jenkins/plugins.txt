@@ -1,0 +1,78 @@
+# =============================================================================
+# Jenkins Plugin List — Nexus Freelance Platform
+# Format: plugin-id:version  (omit version to get latest compatible)
+# =============================================================================
+
+# ── Core Pipeline ──────────────────────────────────────────────────────────────
+workflow-aggregator:latest
+pipeline-stage-view:latest
+pipeline-graph-analysis:latest
+pipeline-build-step:latest
+pipeline-input-step:latest
+pipeline-milestone-step:latest
+pipeline-model-definition:latest
+pipeline-utility-steps:latest
+workflow-cps:latest
+workflow-job:latest
+
+# ── Source Control ─────────────────────────────────────────────────────────────
+git:latest
+github:latest
+github-branch-source:latest
+bitbucket:latest
+gitlab-plugin:latest
+
+# ── Credentials & Security ─────────────────────────────────────────────────────
+credentials:latest
+credentials-binding:latest
+plain-credentials:latest
+ssh-credentials:latest
+kubernetes-credentials:latest
+mask-passwords:latest
+
+# ── Docker ─────────────────────────────────────────────────────────────────────
+docker-workflow:latest
+docker-plugin:latest
+docker-commons:latest
+
+# ── Kubernetes ─────────────────────────────────────────────────────────────────
+kubernetes:latest
+kubernetes-cli:latest
+
+# ── Code Quality ───────────────────────────────────────────────────────────────
+sonar:latest
+jacoco:latest
+htmlpublisher:latest
+cobertura:latest
+
+# ── Test Reporting ─────────────────────────────────────────────────────────────
+junit:latest
+test-results-aggregator:latest
+
+# ── Notifications ──────────────────────────────────────────────────────────────
+slack:latest
+mailer:latest
+email-ext:latest
+
+# ── UI & UX ────────────────────────────────────────────────────────────────────
+ansicolor:latest
+timestamper:latest
+build-timeout:latest
+ws-cleanup:latest
+blueocean:latest
+dashboard-view:latest
+build-monitor-plugin:latest
+antisamy-markup-formatter:latest
+
+# ── Parameterised Builds ───────────────────────────────────────────────────────
+extended-choice-parameter:latest
+active-choices:latest
+
+# ── Utility ────────────────────────────────────────────────────────────────────
+lockable-resources:latest
+job-dsl:latest
+configuration-as-code:latest
+matrix-auth:latest
+role-strategy:latest
+build-name-setter:latest
+copyartifact:latest
