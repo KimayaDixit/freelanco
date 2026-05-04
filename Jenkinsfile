@@ -80,7 +80,7 @@ pipeline {
                                             'service-listing-service','chat-service','api-gateway']
                             services.each { svc ->
                                 sh """
-                                    pip install flake8 pylint --quiet --break-system-packages
+                                    pip install flake8 pylint --quiet --break-system-packages --ignore-installed
                                     echo "── Linting ${svc} ──"
                                     flake8 services/${svc}/app.py \
                                         --max-line-length=120 \
@@ -459,8 +459,8 @@ def changedServicesList() {
 def runPythonTests(String service) {
     dir("services/${service}") {
         sh """
-            pip install -r requirements.txt --quiet --break-system-packages
-            pip install pytest pytest-cov pytest-mock pytest-flask coverage --quiet --break-system-packages
+            pip install -r requirements.txt --quiet --break-system-packages --ignore-installed
+pip         install pytest pytest-cov pytest-mock pytest-flask coverage --quiet --break-system-packages --ignore-installed
             mkdir -p test-results
             # Run tests if test directory exists, otherwise create a placeholder
             if [ -d tests ]; then
