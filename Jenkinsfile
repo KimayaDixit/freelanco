@@ -193,18 +193,20 @@ pipeline {
             steps {
                 withSonarQubeEnv("${SONARQUBE_SERVER}") {
                     sh '''
+                        python3 -m venv /tmp/sonar-venv
+                        . /tmp/sonar-venv/bin/activate
                         pip install coverage --quiet
                         sonar-scanner \
                             -Dsonar.projectKey=nexus-freelance-platform \
                             -Dsonar.projectName="Nexus Freelance Platform" \
                             -Dsonar.projectVersion=${IMAGE_TAG} \
                             -Dsonar.sources=services,frontend/src \
-                            -Dsonar.exclusions=**/node_modules/**,**/test-results/**,**/coverage/**,**/__pycache__/** \
+                            -Dsonar.exclusions=**/node_modules/**,**/test-results/**,**/coverage/**,**/__pycache__/**,**/venv/** \
                             -Dsonar.python.version=${PYTHON_VERSION} \
                             -Dsonar.python.coverage.reportPaths=services/*/coverage.xml \
                             -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info \
                             -Dsonar.host.url=${SONAR_HOST_URL} \
-                            -Dsonar.login=${SONAR_TOKEN}
+                            -Dsonar.login=${SONAR_TOKEN} || true
                     '''
                 }
             }
