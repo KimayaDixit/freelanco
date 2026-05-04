@@ -99,8 +99,7 @@ pipeline {
                             sh '''
                                 npm ci --silent || true
                                 npx eslint src/ --ext .js,.jsx \
-                                    --max-warnings=50 \
-                                    --format stylish || true
+                                    --max-warnings=50 || true
                             '''
                         }
                     }
