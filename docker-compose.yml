@@ -186,6 +186,31 @@ services:
     networks:
       - freelanco-network
 
+  sonarqube:
+    image: sonarqube:10-community
+    container_name: freelanco-sonarqube
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-logs:/opt/sonarqube/logs
+      - sonarqube-extensions:/opt/sonarqube/extensions
+    networks:
+      - freelanco-network
+
+  sonarqube-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonarqube
+    volumes:
+      - sonarqube-db-data:/var/lib/postgresql/data
+    networks:
+      - freelanco-network
+
   # ── Frontend ───────────────────────────────────────────────────────────────────
 
   frontend:
@@ -285,3 +310,7 @@ volumes:
   prometheus-data:
   grafana-data:
   jenkins-data:
+  sonarqube-data:
+  sonarqube-logs:
+  sonarqube-extensions:
+  sonarqube-db-data:
