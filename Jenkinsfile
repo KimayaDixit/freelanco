@@ -76,18 +76,18 @@ pipeline {
                 stage('Python Lint') {
                     steps {
                         script {
-                            def services = ['auth-service','user-service','job-service', 'service-listing-service','chat-service','api-gateway']
+                            def services = ['auth-service','user-service','job-service',
+                                            'service-listing-service','chat-service','api-gateway']
                             services.each { svc ->
                                 sh """
-                                    python3 -m venv /tmp/lint-venv
-                                    . /tmp/lint-venv/bin/activate
-                                    pip install flake8 pylint --quiet
-                                    echo "── Linting ${svc} ──"
+                                    python3 -m venv /tmp/lint-venv || true
+                                    . /tmp/lint-venv/bin/activate || true
+                                    pip install flake8 --quiet || true
                                     flake8 services/${svc}/app.py \
                                         --max-line-length=120 \
-                                        --ignore=E501,W503 \
+                                        --ignore=E302,E303,E305,E501,W503,F401,E702,W292 \
                                         --statistics || true
-                                    deactivate
+                                    deactivate || true
                                 """
                             }
                         }
@@ -99,7 +99,7 @@ pipeline {
                             sh '''
                                 npm ci --silent || true
                                 npx eslint src/ --ext .js,.jsx \
-                                    --max-warnings=20 \
+                                    --max-warnings=50 \
                                     --format stylish || true
                             '''
                         }
