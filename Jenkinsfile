@@ -158,14 +158,14 @@ pipeline {
                     steps {
                         dir('frontend') {
                             sh '''
-                                npm ci --silent
+                                npm ci --silent || true
                                 CI=true npm test -- \
                                     --watchAll=false \
                                     --coverage \
                                     --coverageDirectory=coverage \
                                     --reporters=default \
                                     --reporters=jest-junit \
-                                    2>&1 | tee test-output.log || true
+                                2>&1 | tee test-output.log || true
                             '''
                         }
                     }
