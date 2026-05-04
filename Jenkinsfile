@@ -173,11 +173,15 @@ pipeline {
                     post {
                         always {
                             junit allowEmptyResults: true, testResults: 'frontend/junit.xml'
-                            publishHTML([
-                                allowMissing: true, alwaysLinkToLastBuild: true,
-                                keepAll: true, reportDir: 'frontend/coverage/lcov-report',
-                                reportFiles: 'index.html', reportName: 'Frontend Coverage'
-                            ])
+                            script {
+                                if (fileExists('frontend/coverage/lcov-report/index.html')) {
+                                    publishHTML([
+                                        allowMissing: true, alwaysLinkToLastBuild: true,
+                                        keepAll: true, reportDir: 'frontend/coverage/lcov-report',
+                                        reportFiles: 'index.html', reportName: 'Frontend Coverage'
+                                    ])
+                                }
+                            }
                         }
                     }
                 }
