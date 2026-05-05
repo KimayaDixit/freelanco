@@ -94,3 +94,19 @@ jobs:
           periodic(5)
         }
       }
+  - script: |
+      pipelineJob('freelanco') {
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/KimayaDixit/freelanco.git')
+                }
+                branch('*/main')
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+      }
