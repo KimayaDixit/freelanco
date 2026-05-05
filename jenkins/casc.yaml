@@ -1,0 +1,96 @@
+jenkins:
+  systemMessage: "Freelanco CI/CD - Configured automatically via JCasC"
+  numExecutors: 2
+  scmCheckoutRetryCount: 2
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "admin"
+          properties:
+            - timezone:
+                timeZoneName: "Asia/Kolkata"
+
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: "DOCKER_BUILDKIT"
+            value: "1"
+
+tool:
+  git:
+    installations:
+      - name: "Default"
+        home: "git"
+
+unclassified:
+  sonarGlobalConfiguration:
+    buildWrapperEnabled: true
+    installations:
+      - name: "SonarQube"
+        serverUrl: "http://sonarqube:9000"
+        credentialsId: "SONAR_TOKEN"
+
+  timestamperConfig:
+    allPipelines: true
+
+  ansiColorBuildWrapper:
+    globalColorMapName: "xterm"
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - string:
+              scope: GLOBAL
+              id: "DOCKER_REGISTRY"
+              secret: "${DOCKER_REGISTRY}"
+              description: "Docker Registry URL"
+          - usernamePassword:
+              scope: GLOBAL
+              id: "docker-hub-credentials"
+              username: "${DOCKER_HUB_USER}"
+              password: "${DOCKER_HUB_PASS}"
+              description: "Docker Hub Login"
+          - string:
+              scope: GLOBAL
+              id: "JWT_SECRET"
+              secret: "${JWT_SECRET}"
+              description: "JWT Secret Key"
+          - string:
+              scope: GLOBAL
+              id: "SONAR_TOKEN"
+              secret: "${SONAR_TOKEN}"
+              description: "SonarQube Token"
+          - file:
+              scope: GLOBAL
+              id: "kubeconfig-credentials"
+              fileName: "config"
+              secretBytes: "${KUBECONFIG_BASE64}"
+              description: "Kubernetes Config"
+
+jobs:
+  - script: >
+      multibranchPipelineJob('freelanco') {
+        branchSources {
+          git {
+            id('freelanco-repo')
+            remote('https://github.com/KimayaDixit/freelanco.git')
+            includes('main develop release/*')
+          }
+        }
+        factory {
+          workflowBranchProjectFactory {
+            scriptPath('Jenkinsfile')
+          }
+        }
+        triggers {
+          periodic(5)
+        }
+      }

@@ -90,4 +90,7 @@ ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false \
                -Xmx2g -Xms512m"
 ENV JENKINS_OPTS="--httpPort=8080"
 
+ENV CASC_JENKINS_CONFIG=/var/jenkins_home/casc.yaml
+COPY casc.yaml /var/jenkins_home/casc.yaml
+
 EXPOSE 8080 50000
