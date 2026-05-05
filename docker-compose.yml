@@ -185,6 +185,8 @@ services:
     restart: unless-stopped
     networks:
       - freelanco-network
+    env_file:
+      - jenkins.env
 
   sonarqube:
     image: sonarqube:10-community
