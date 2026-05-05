@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-service
+  namespace: NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-service
+  template:
+    metadata:
+      labels:
+        app: chat-service
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: chat-service
+          image: REGISTRY/chat-service:IMAGE_TAG
+          ports:
+            - containerPort: 5005
+          env:
+            - name: JWT_SECRET
+              value: "supersecretkey_change_in_production"
+            - name: DATABASE_URL
+              value: "postgresql://postgres:password@chat-db:5432/chatdb"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-service
+  namespace: NAMESPACE
+spec:
+  selector:
+    app: chat-service
+  ports:
+    - port: 5005
+      targetPort: 5005

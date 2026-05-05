@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-listing-service
+  namespace: NAMESPACE
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-listing-service
+  template:
+    metadata:
+      labels:
+        app: service-listing-service
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: service-listing-service
+          image: REGISTRY/service-listing-service:IMAGE_TAG
+          ports:
+            - containerPort: 5004
+          env:
+            - name: JWT_SECRET
+              value: "supersecretkey_change_in_production"
+            - name: DATABASE_URL
+              value: "postgresql://postgres:password@service-db:5432/servicedb"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-listing-service
+  namespace: NAMESPACE
+spec:
+  selector:
+    app: service-listing-service
+  ports:
+    - port: 5004
+      targetPort: 5004
