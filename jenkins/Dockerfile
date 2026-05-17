@@ -81,8 +81,7 @@ RUN groupadd -f docker && usermod -aG docker jenkins
 # ── Pre-install Jenkins plugins ───────────────────────────────────────────────
 USER jenkins
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
-RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt \
-    --verbose 2>&1 | tail -20
+RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
 
 # ── JVM tuning ────────────────────────────────────────────────────────────────
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false \

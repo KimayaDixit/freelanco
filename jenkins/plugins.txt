@@ -20,7 +20,6 @@ git:latest
 github:latest
 github-branch-source:latest
 bitbucket:latest
-gitlab-plugin:latest
 
 # ── Credentials & Security ─────────────────────────────────────────────────────
 credentials:latest
@@ -59,14 +58,11 @@ ansicolor:latest
 timestamper:latest
 build-timeout:latest
 ws-cleanup:latest
-blueocean:latest
 dashboard-view:latest
 build-monitor-plugin:latest
 antisamy-markup-formatter:latest
 
 # ── Parameterised Builds ───────────────────────────────────────────────────────
-extended-choice-parameter:latest
-active-choices:latest
 
 # ── Utility ────────────────────────────────────────────────────────────────────
 lockable-resources:latest
