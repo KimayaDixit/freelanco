@@ -76,21 +76,19 @@ credentials:
               description: "Kubernetes Config"
 
 jobs:
-  - script: >
-      multibranchPipelineJob('freelanco') {
-        branchSources {
-          git {
-            id('freelanco-repo')
-            remote('https://github.com/KimayaDixit/freelanco.git')
-            includes('main develop release/*')
-          }
-        }
-        factory {
-          workflowBranchProjectFactory {
+  - script: |
+      pipelineJob('freelanco') {
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/KimayaDixit/freelanco.git')
+                }
+                branch('*/main')
+              }
+            }
             scriptPath('Jenkinsfile')
           }
-        }
-        triggers {
-          periodic(5)
         }
       }
